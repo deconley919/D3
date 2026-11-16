@@ -3,7 +3,8 @@
 // apply() decides how, or whether, to show them over time.
 
 import {
-  isPassable,
+  ALL_TERRAINS,
+  canEnter,
   type ItemKind,
   type Terrain,
   terrainAt,
@@ -54,7 +55,8 @@ export type GameEvent =
     recipe: string;
     reason: "unknown recipe" | "missing items";
     missing: Missing[];
-  };
+  }
+  | { type: "unlocked"; terrains: Terrain[] };
 
 const STEPS: Record<Direction, Cell> = {
   north: { x: 0, y: -1 },
@@ -91,7 +93,7 @@ function move(state: GameState, direction: Direction): GameEvent[] {
   const from = { ...state.player };
   const to = { x: from.x + step.x, y: from.y + step.y };
   const terrain = terrainAt(state.seed, to.x, to.y);
-  if (!isPassable(terrain)) {
+  if (!canEnter(state.inventory, terrain)) {
     return [{ type: "blocked", at: from, toward: to, terrain }];
   }
   state.player.x = to.x;
@@ -145,6 +147,10 @@ function craft(state: GameState, id: string): GameEvent[] {
     }];
   }
 
+  const enterable = () =>
+    ALL_TERRAINS.filter((t) => canEnter(state.inventory, t));
+  const before = enterable();
+
   const counts: Counts = {};
   for (const [item, need] of inputs) {
     const remaining = state.inventory[item]! - need;
@@ -157,10 +163,15 @@ function craft(state: GameState, id: string): GameEvent[] {
   state.inventory[recipe.output] = made;
   counts[recipe.output] = made;
 
-  return [{
-    type: "crafted",
-    recipe: recipe.id,
-    output: recipe.output,
-    counts,
-  }];
+  const opened = enterable().filter((t) => !before.includes(t));
+  const events: GameEvent[] = [
+    {
+      type: "crafted",
+      recipe: recipe.id,
+      output: recipe.output,
+      counts,
+    },
+  ];
+  if (opened.length > 0) events.push({ type: "unlocked", terrains: opened });
+  return events;
 }

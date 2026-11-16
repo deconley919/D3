@@ -28,6 +28,8 @@ function describe(event: GameEvent): string {
         ? `no recipe "${event.recipe}"`
         : `can't craft ${event.recipe}: need ` +
           event.missing.map((m) => `${m.item} ${m.have}/${m.need}`).join(", ");
+    case "unlocked":
+      return `${event.terrains.join(", ")} is now crossable`;
   }
 }
 

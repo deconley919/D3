@@ -5,6 +5,8 @@ export type Terrain = "sand" | "palm" | "floodwater" | "basalt";
 
 export type ItemKind = "fiber" | "shell" | "pearl" | "rope" | "raft" | "charm";
 
+export type Inventory = Partial<Record<ItemKind, number>>;
+
 //what each terrain yields when gathered
 export const YIELDS: Record<Terrain, ItemKind | null> = {
   sand: "shell",
@@ -13,6 +15,25 @@ export const YIELDS: Record<Terrain, ItemKind | null> = {
   basalt: null,
 };
 
+export const ALL_TERRAINS = Object.keys(YIELDS) as Terrain[];
+
+export const UNLOCKS: Partial<Record<ItemKind, readonly Terrain[]>> = {
+  raft: ["floodwater"],
+};
+
+export function canEnter(inventory: Inventory, terrain: Terrain): boolean {
+  if (isPassable(terrain)) return true;
+
+  for (
+    const [item, terrains] of Object.entries(UNLOCKS) as [
+      ItemKind,
+      readonly Terrain[],
+    ][]
+  ) {
+    if ((inventory[item] ?? 0) > 0 && terrains.includes(terrain)) return true;
+  }
+  return false;
+}
 export function terrainAt(seed: number, x: number, y: number): Terrain {
   const raw = 0.65 * noise(seed, x, y, 9) + 0.35 * noise(seed + 1, x, y, 3);
   // Every game starts at the origin, so flatten the land there. Otherwise some
