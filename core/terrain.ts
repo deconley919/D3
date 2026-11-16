@@ -3,7 +3,7 @@
 
 export type Terrain = "sand" | "palm" | "floodwater" | "basalt";
 
-export type ItemKind = string;
+export type ItemKind = "fiber" | "shell" | "pearl" | "rope" | "raft" | "charm";
 
 //what each terrain yields when gathered
 export const YIELDS: Record<Terrain, ItemKind | null> = {

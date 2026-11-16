@@ -20,6 +20,13 @@ function describe(event: GameEvent): string {
       return `gathered ${event.item} at ${event.at.x}, ${event.at.y}`;
     case "gatherFailed":
       return `nothing gathered: ${event.reason}`;
+    case "crafted":
+      return `crafted ${event.output}`;
+    case "craftFailed":
+      return event.reason === "unknown recipe"
+        ? `no recipe "${event.recipe}"`
+        : `can't craft ${event.recipe}: need` +
+          event.missing.map((m) => `${m.item} ${m.have}/${m.need}`).join(", ");
   }
 }
 

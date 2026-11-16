@@ -9,10 +9,14 @@ import {
   terrainAt,
   YIELDS,
 } from "./terrain.ts";
+import { RECIPES } from "./recipes.ts";
 
 export type Cell = { x: number; y: number };
 
 export type Direction = "north" | "south" | "east" | "west";
+
+type Counts = Partial<Record<ItemKind, number>>;
+type Missing = { item: ItemKind; need: number; have: number };
 
 // Plain data that survives JSON. Terrain is absent because the seed can recompute
 // it: besides the seed, only what the player has caused belongs here.
@@ -26,7 +30,8 @@ export type GameState = {
 // Command: https://gameprogrammingpatterns.com/command.html
 export type Command =
   | { type: "move"; direction: Direction }
-  | { type: "gather" }; // gather within the player's cell
+  | { type: "gather" } // gather within the player's cell
+  | { type: "craft"; recipe: string };
 
 // Domain Event: https://martinfowler.com/eaaDev/DomainEvent.html
 export type GameEvent =
@@ -37,6 +42,18 @@ export type GameEvent =
     type: "gatherFailed";
     at: Cell;
     reason: "already gathered" | "nothing here";
+  }
+  | {
+    type: "crafted";
+    recipe: string;
+    output: ItemKind;
+    counts: Counts;
+  }
+  | {
+    type: "craftFailed";
+    recipe: string;
+    reason: "unknown recipe" | "missing items";
+    missing: Missing[];
   };
 
 const STEPS: Record<Direction, Cell> = {
@@ -60,6 +77,8 @@ export function apply(state: GameState, command: Command): GameEvent[] {
       return move(state, command.direction);
     case "gather":
       return gather(state);
+    case "craft":
+      return craft(state, command.recipe);
   }
 }
 
@@ -97,4 +116,51 @@ function gather(state: GameState): GameEvent[] {
   state.inventory[item] = (state.inventory[item] ?? 0) + 1;
 
   return [{ type: "gathered", at: here, item, count: state.inventory[item]! }];
+}
+
+function craft(state: GameState, id: string): GameEvent[] {
+  const recipe = RECIPES.find((r) => r.id === id);
+  if (!recipe) {
+    return [{
+      type: "craftFailed",
+      recipe: id,
+      reason: "unknown recipe",
+      missing: [],
+    }];
+  }
+
+  const inputs = Object.entries(recipe.inputs) as [ItemKind, number][];
+
+  const missing: Missing[] = [];
+  for (const [item, need] of inputs) {
+    const have = state.inventory[item] ?? 0;
+    if (have < need) missing.push({ item, need, have });
+  }
+  if (missing.length > 0) {
+    return [{
+      type: "craftFailed",
+      recipe: id,
+      reason: "missing items",
+      missing,
+    }];
+  }
+
+  const counts: Counts = {};
+  for (const [item, need] of inputs) {
+    const remaining = state.inventory[item]! - need;
+    if (remaining === 0) delete state.inventory[item];
+    else state.inventory[item] = remaining;
+    counts[item] = remaining;
+  }
+
+  const made = (state.inventory[recipe.output] ?? 0) + 1;
+  state.inventory[recipe.output] = made;
+  counts[recipe.output] = made;
+
+  return [{
+    type: "crafted",
+    recipe: recipe.id,
+    output: recipe.output,
+    counts,
+  }];
 }
