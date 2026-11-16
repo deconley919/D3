@@ -1,4 +1,5 @@
 import { type GameEvent, type GameState, terrainAt } from "../core/mod.ts";
+import { ItemKind } from "../core/terrain.ts";
 
 function element(id: string): HTMLElement {
   return document.getElementById(id)!;
@@ -23,10 +24,13 @@ function describe(event: GameEvent): string {
 export class Hud {
   private readonly seed: number;
   private readonly gathered = new Set<string>();
+  private readonly shownItems: Partial<Record<ItemKind, number>>;
 
   constructor(state: GameState) {
     this.seed = state.seed;
+    this.shownItems = { ...state.inventory };
     this.showPosition(state.player.x, state.player.y);
+    this.renderInventory();
   }
 
   show(event: GameEvent) {
@@ -36,6 +40,8 @@ export class Hud {
     if (event.type === "gathered") {
       this.gathered.add(`${event.at.x},${event.at.y}`);
       this.showPosition(event.at.x, event.at.y);
+      this.shownItems[event.item] = event.count;
+      this.renderInventory();
     }
   }
 
@@ -45,5 +51,25 @@ export class Hud {
     element("terrain").textContent = this.gathered.has(`${x},${y}`)
       ? `${terrain} (picked clean)`
       : terrain;
+  }
+
+  private renderInventory() {
+    const list = element("inventory");
+    list.replaceChildren();
+
+    const entries = Object.entries(this.shownItems);
+    if (entries.length === 0) {
+      const row = document.createElement("li");
+      row.className = "empty";
+      row.textContent = "empty";
+      list.append(row);
+      return;
+    }
+
+    for (const [item, count] of entries) {
+      const row = document.createElement("li");
+      row.textContent = `${item} x ${count}`;
+      list.append(row);
+    }
   }
 }
