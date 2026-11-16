@@ -27,6 +27,7 @@ export type GameState = {
   player: Cell;
   inventory: Partial<Record<ItemKind, number>>;
   gathered: Record<string, true>; // "x,y" cells player changed/gathered
+  won: boolean;
 };
 
 // Command: https://gameprogrammingpatterns.com/command.html
@@ -57,7 +58,8 @@ export type GameEvent =
     reason: "unknown recipe" | "missing items";
     missing: Missing[];
   }
-  | { type: "unlocked"; terrains: Terrain[] };
+  | { type: "unlocked"; terrains: Terrain[] }
+  | { type: "ended"; recipe: string };
 
 const STEPS: Record<Direction, Cell> = {
   north: { x: 0, y: -1 },
@@ -70,11 +72,18 @@ const cellKey = (cell: Cell): string => `${cell.x},${cell.y}`;
 
 // Singleton, avoided on purpose: tests make as many games as they need. https://gameprogrammingpatterns.com/singleton.html
 export function newGame(seed: number): GameState {
-  return { seed, player: { x: 0, y: 0 }, inventory: {}, gathered: {} };
+  return {
+    seed,
+    player: { x: 0, y: 0 },
+    inventory: {},
+    gathered: {},
+    won: false,
+  };
 }
 
 // The single way in. It updates the state it is given and returns the events.
 export function apply(state: GameState, command: Command): GameEvent[] {
+  if (state.won) return [];
   switch (command.type) {
     case "move":
       return move(state, command.direction);
@@ -183,5 +192,9 @@ function craft(state: GameState, id: string): GameEvent[] {
     },
   ];
   if (opened.length > 0) events.push({ type: "unlocked", terrains: opened });
+  if (recipe.capstone) {
+    state.won = true;
+    events.push({ type: "ended", recipe: recipe.id });
+  }
   return events;
 }

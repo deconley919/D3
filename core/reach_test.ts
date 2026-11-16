@@ -21,3 +21,8 @@ Deno.test("without the raft, the charm is unreachable", () => {
   const noRaft = RECIPES.filter((r) => r.id !== "raft");
   assert(unreachableRecipes(noRaft, YIELDS, UNLOCKS).includes("charm"));
 });
+
+Deno.test("the capstone is reachable", () => {
+  const capstone = RECIPES.find((r) => r.capstone)!;
+  assert(!unreachableRecipes(RECIPES, YIELDS, UNLOCKS).includes(capstone.id));
+});

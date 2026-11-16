@@ -3,7 +3,16 @@
 
 export type Terrain = "sand" | "palm" | "floodwater" | "basalt";
 
-export type ItemKind = "fiber" | "shell" | "pearl" | "rope" | "raft" | "charm";
+export type ItemKind =
+  | "fiber"
+  | "shell"
+  | "pearl"
+  | "rope"
+  | "raft"
+  | "water necklace"
+  | "charm"
+  | "water armor"
+  | "beacon";
 
 export type Inventory = Partial<Record<ItemKind, number>>;
 

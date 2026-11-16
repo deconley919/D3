@@ -30,6 +30,8 @@ function describe(event: GameEvent): string {
           event.missing.map((m) => `${m.item} ${m.have}/${m.need}`).join(", ");
     case "unlocked":
       return `${event.terrains.join(", ")} is now crossable`;
+    case "ended":
+      return `the ${event.recipe} is lit. You win!`;
   }
 }
 
@@ -71,6 +73,8 @@ export class Hud {
       }
       this.renderInventory();
     }
+
+    if (event.type === "ended") element("banner").hidden = false;
   }
 
   private showPosition(x: number, y: number) {
