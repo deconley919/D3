@@ -8,20 +8,41 @@ export type Cell = { x: number; y: number };
 
 export type Direction = "north" | "south" | "east" | "west";
 
+// gatherable items
+export type ItemKind = "";
+
+// what each terrain cell offers as a gatherable for players
+export const YIELDS: Record<Terrain, ItemKind | null> = {
+  grass: null,
+  forest: null,
+  water: null,
+  rock: null,
+};
+
 // Plain data that survives JSON. Terrain is absent because the seed can recompute
 // it: besides the seed, only what the player has caused belongs here.
 export type GameState = {
   seed: number;
   player: Cell;
+  inventory: Partial<Record<ItemKind, number>>;
+  gathered: Record<string, true>; // "x,y" cells player changed/gathered
 };
 
 // Command: https://gameprogrammingpatterns.com/command.html
-export type Command = { type: "move"; direction: Direction };
+export type Command =
+  | { type: "move"; direction: Direction }
+  | { type: "gather" }; // gather within the player's cell
 
 // Domain Event: https://martinfowler.com/eaaDev/DomainEvent.html
 export type GameEvent =
   | { type: "moved"; from: Cell; to: Cell }
-  | { type: "blocked"; at: Cell; toward: Cell; terrain: Terrain };
+  | { type: "blocked"; at: Cell; toward: Cell; terrain: Terrain }
+  | { type: "gathered"; at: Cell; item: ItemKind; count: number }
+  | {
+    type: "gatherFailed";
+    at: Cell;
+    reason: "already gathered" | "nothing here";
+  };
 
 const STEPS: Record<Direction, Cell> = {
   north: { x: 0, y: -1 },
@@ -30,9 +51,11 @@ const STEPS: Record<Direction, Cell> = {
   west: { x: -1, y: 0 },
 };
 
+const cellKey = (cell: Cell): string => `${cell.x},${cell.y}`;
+
 // Singleton, avoided on purpose: tests make as many games as they need. https://gameprogrammingpatterns.com/singleton.html
 export function newGame(seed: number): GameState {
-  return { seed, player: { x: 0, y: 0 } };
+  return { seed, player: { x: 0, y: 0 }, inventory: {}, gathered: {} };
 }
 
 // The single way in. It updates the state it is given and returns the events.
@@ -40,6 +63,8 @@ export function apply(state: GameState, command: Command): GameEvent[] {
   switch (command.type) {
     case "move":
       return move(state, command.direction);
+    case "gather":
+      return gather(state);
   }
 }
 
@@ -58,4 +83,23 @@ function move(state: GameState, direction: Direction): GameEvent[] {
   state.player.x = to.x;
   state.player.y = to.y;
   return [{ type: "moved", from, to }];
+}
+
+function gather(state: GameState): GameEvent[] {
+  const here: Cell = { ...state.player };
+  const key = cellKey(here);
+
+  if (state.gathered[key]) {
+    return [{ type: "gatherFailed", at: here, reason: "already gathered" }];
+  }
+
+  const item = YIELDS[terrainAt(state.seed, here.x, here.y)];
+  if (item === null) {
+    return [{ type: "gatherFailed", at: here, reason: "nothing here" }];
+  }
+
+  state.gathered[key] = true;
+  state.inventory[item] = (state.inventory[item] ?? 0) + 1;
+
+  return [{ type: "gathered", at: here, item, count: state.inventory[item]! }];
 }
