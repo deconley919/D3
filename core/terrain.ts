@@ -1,20 +1,30 @@
 // The world is a pure function of a seed and coordinates. Nothing here is stored,
 // so the world can be effectively unbounded while saved state stays small.
 
-export type Terrain = "grass" | "forest" | "water" | "rock";
+export type Terrain = "sand" | "palm" | "floodwater" | "basalt";
+
+export type ItemKind = string;
+
+//what each terrain yields when gathered
+export const YIELDS: Record<Terrain, ItemKind | null> = {
+  sand: "shell",
+  palm: "fiber",
+  floodwater: "pearl",
+  basalt: null,
+};
 
 export function terrainAt(seed: number, x: number, y: number): Terrain {
   const raw = 0.65 * noise(seed, x, y, 9) + 0.35 * noise(seed + 1, x, y, 3);
   // Every game starts at the origin, so flatten the land there. Otherwise some
   // seeds would start inside a lake or walled into a pocket.
   const height = 0.5 + (raw - 0.5) * Math.min(1, Math.hypot(x, y) / 10);
-  if (height < 0.3) return "water";
-  if (height > 0.7) return "rock";
-  return noise(seed + 2, x, y, 6) < 0.45 ? "forest" : "grass";
+  if (height < 0.3) return "floodwater";
+  if (height > 0.7) return "basalt";
+  return noise(seed + 2, x, y, 6) < 0.45 ? "palm" : "sand";
 }
 
 export function isPassable(terrain: Terrain): boolean {
-  return terrain !== "water" && terrain !== "rock";
+  return terrain !== "floodwater" && terrain !== "basalt";
 }
 
 // Value noise: random numbers at coarse grid points, blended between them, so

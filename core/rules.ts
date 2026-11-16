@@ -2,22 +2,17 @@
 // once, and the events it returns are a record of what happened. Whoever called
 // apply() decides how, or whether, to show them over time.
 
-import { isPassable, type Terrain, terrainAt } from "./terrain.ts";
+import {
+  isPassable,
+  type ItemKind,
+  type Terrain,
+  terrainAt,
+  YIELDS,
+} from "./terrain.ts";
 
 export type Cell = { x: number; y: number };
 
 export type Direction = "north" | "south" | "east" | "west";
-
-// gatherable items
-export type ItemKind = "";
-
-// what each terrain cell offers as a gatherable for players
-export const YIELDS: Record<Terrain, ItemKind | null> = {
-  grass: null,
-  forest: null,
-  water: null,
-  rock: null,
-};
 
 // Plain data that survives JSON. Terrain is absent because the seed can recompute
 // it: besides the seed, only what the player has caused belongs here.

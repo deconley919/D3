@@ -10,6 +10,11 @@ function describe(event: GameEvent): string {
       return `moved to ${event.to.x}, ${event.to.y}`;
     case "blocked":
       return `blocked by ${event.terrain} at ${event.toward.x}, ${event.toward.y}`;
+
+    case "gathered":
+      return `gathered ${event.item} at ${event.at.x}, ${event.at.y}`;
+    case "gatherFailed":
+      return `nothing gathered: ${event.reason}`;
   }
 }
 
@@ -17,6 +22,7 @@ function describe(event: GameEvent): string {
 // tools can read. It changes only as events play.
 export class Hud {
   private readonly seed: number;
+  private readonly gathered = new Set<string>();
 
   constructor(state: GameState) {
     this.seed = state.seed;
@@ -26,10 +32,18 @@ export class Hud {
   show(event: GameEvent) {
     element("live").textContent = describe(event);
     if (event.type === "moved") this.showPosition(event.to.x, event.to.y);
+
+    if (event.type === "gathered") {
+      this.gathered.add(`${event.at.x},${event.at.y}`);
+      this.showPosition(event.at.x, event.at.y);
+    }
   }
 
   private showPosition(x: number, y: number) {
     element("position").textContent = `${x}, ${y}`;
-    element("terrain").textContent = terrainAt(this.seed, x, y);
+    const terrain = terrainAt(this.seed, x, y);
+    element("terrain").textContent = this.gathered.has(`${x},${y}`)
+      ? `${terrain} (picked clean)`
+      : terrain;
   }
 }
