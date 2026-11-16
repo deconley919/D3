@@ -2,6 +2,7 @@ import {
   type GameEvent,
   type GameState,
   type ItemKind,
+  RECIPES,
   terrainAt,
 } from "../core/mod.ts";
 
@@ -25,7 +26,7 @@ function describe(event: GameEvent): string {
     case "craftFailed":
       return event.reason === "unknown recipe"
         ? `no recipe "${event.recipe}"`
-        : `can't craft ${event.recipe}: need` +
+        : `can't craft ${event.recipe}: need ` +
           event.missing.map((m) => `${m.item} ${m.have}/${m.need}`).join(", ");
   }
 }
@@ -41,6 +42,7 @@ export class Hud {
     this.seed = state.seed;
     this.shownItems = { ...state.inventory };
     this.showPosition(state.player.x, state.player.y);
+    this.renderRecipes();
     this.renderInventory();
   }
 
@@ -52,6 +54,19 @@ export class Hud {
       this.gathered.add(`${event.at.x},${event.at.y}`);
       this.showPosition(event.at.x, event.at.y);
       this.shownItems[event.item] = event.count;
+      this.renderInventory();
+    }
+
+    if (event.type === "crafted") {
+      for (
+        const [item, count] of Object.entries(event.counts) as [
+          ItemKind,
+          number,
+        ][]
+      ) {
+        if (count === 0) delete this.shownItems[item];
+        else this.shownItems[item] = count;
+      }
       this.renderInventory();
     }
   }
@@ -82,5 +97,19 @@ export class Hud {
       row.textContent = `${item} x ${count}`;
       list.append(row);
     }
+  }
+
+  private renderRecipes() {
+    const list = element("recipes");
+    list.replaceChildren(
+      ...RECIPES.map((recipe, i) => {
+        const row = document.createElement("li");
+        const inputs = Object.entries(recipe.inputs)
+          .map(([item, n]) => `${item} ×${n}`)
+          .join(", ");
+        row.textContent = `${i + 1}  ${recipe.output} ← ${inputs}`;
+        return row;
+      }),
+    );
   }
 }

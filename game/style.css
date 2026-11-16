@@ -48,7 +48,8 @@ body {
   color: #8d8a82;
 }
 
-#inventory {
+#inventory,
+#recipes {
   margin: 0;
   padding: 0;
   list-style: none;

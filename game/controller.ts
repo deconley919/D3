@@ -1,6 +1,7 @@
 import { apply, type Command, type Direction } from "../core/mod.ts";
 import type { GameState } from "../core/mod.ts";
 import type { Presenter } from "./presenter.ts";
+import { RECIPES } from "../core/mod.ts";
 
 const ARROWS: Record<string, Direction> = {
   ArrowUp: "north",
@@ -43,6 +44,15 @@ export class Controller {
       event.preventDefault();
       if (event.repeat) return;
       this.pressed = { type: "gather" };
+      this.next();
+      return;
+    }
+
+    const n = Number(event.key);
+    if (Number.isInteger(n) && n >= 1 && n <= 9 && RECIPES[n - 1]) {
+      event.preventDefault();
+      if (event.repeat) return;
+      this.pressed = { type: "craft", recipe: RECIPES[n - 1].id };
       this.next();
       return;
     }
