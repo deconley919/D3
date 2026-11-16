@@ -5,19 +5,20 @@
 import {
   ALL_TERRAINS,
   canEnter,
+  type Inventory,
   type ItemKind,
   type Terrain,
   terrainAt,
   YIELDS,
 } from "./terrain.ts";
-import { RECIPES } from "./recipes.ts";
+import { type Recipe, RECIPES } from "./recipes.ts";
 
 export type Cell = { x: number; y: number };
 
 export type Direction = "north" | "south" | "east" | "west";
 
 type Counts = Partial<Record<ItemKind, number>>;
-type Missing = { item: ItemKind; need: number; have: number };
+export type Missing = { item: ItemKind; need: number; have: number };
 
 // Plain data that survives JSON. Terrain is absent because the seed can recompute
 // it: besides the seed, only what the player has caused belongs here.
@@ -120,6 +121,18 @@ function gather(state: GameState): GameEvent[] {
   return [{ type: "gathered", at: here, item, count: state.inventory[item]! }];
 }
 
+//what a recipe doesnt have
+export function missingFor(inventory: Inventory, recipe: Recipe): Missing[] {
+  const missing: Missing[] = [];
+  for (
+    const [item, need] of Object.entries(recipe.inputs) as [ItemKind, number][]
+  ) {
+    const have = inventory[item] ?? 0;
+    if (have < need) missing.push({ item, need, have });
+  }
+  return missing;
+}
+
 function craft(state: GameState, id: string): GameEvent[] {
   const recipe = RECIPES.find((r) => r.id === id);
   if (!recipe) {
@@ -133,11 +146,8 @@ function craft(state: GameState, id: string): GameEvent[] {
 
   const inputs = Object.entries(recipe.inputs) as [ItemKind, number][];
 
-  const missing: Missing[] = [];
-  for (const [item, need] of inputs) {
-    const have = state.inventory[item] ?? 0;
-    if (have < need) missing.push({ item, need, have });
-  }
+  const missing = missingFor(state.inventory, recipe);
+
   if (missing.length > 0) {
     return [{
       type: "craftFailed",

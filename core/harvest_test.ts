@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertNotEquals } from "@std/assert";
 import { apply, YIELDS } from "./mod.ts";
 import { stateOn } from "./test_helpers.ts";
 
@@ -50,4 +50,24 @@ Deno.test("saved state holds only the cells that changed", () => {
 
   assertEquals(Object.keys(state.gathered).length, 1);
   assertEquals(JSON.parse(JSON.stringify(state)), state);
+});
+
+Deno.test("a gathered event keeps its cell while state moves on", () => {
+  const state = stateOn(SEED, "sand");
+  const { x, y } = state.player;
+
+  const [first] = apply(state, { type: "gather" });
+
+  for (const direction of ["east", "west", "south", "north"] as const) {
+    const events = apply(state, { type: "move", direction });
+    if (events[0].type === "moved") break;
+  }
+  assertNotEquals(state.player, { x, y });
+
+  assertEquals(first, {
+    type: "gathered",
+    at: { x, y },
+    item: YIELDS.sand!,
+    count: 1,
+  });
 });

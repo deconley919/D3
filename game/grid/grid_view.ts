@@ -9,6 +9,7 @@ const VIEW_WIDTH = 800;
 const VIEW_HEIGHT = 600;
 const WALK_MS = 120;
 const BUMP_MS = 60;
+const PICKUP_MS = 90;
 const MARKER_COLOR = 0xf5e6a8;
 const BUMP_COLOR = 0xe0533d;
 
@@ -87,7 +88,7 @@ export class GridView extends Phaser.Scene {
       case "gathered":
         this.gathered.add(`${event.at.x},${event.at.y}`);
         this.drawCellsAround(event.at);
-        return Promise.resolve();
+        return this.pickUp();
       case "gatherFailed":
         return Promise.resolve();
       case "crafted":
@@ -128,6 +129,19 @@ export class GridView extends Phaser.Scene {
           this.marker.setFillStyle(MARKER_COLOR);
           done();
         },
+      });
+    });
+  }
+
+  private pickUp(): Promise<void> {
+    return new Promise((done) => {
+      this.tweens.add({
+        targets: this.marker,
+        scaleX: 1.5,
+        scaleY: 1.5,
+        duration: PICKUP_MS,
+        yoyo: true,
+        onComplete: () => done(),
       });
     });
   }
