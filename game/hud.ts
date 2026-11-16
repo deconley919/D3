@@ -1,5 +1,9 @@
-import { type GameEvent, type GameState, terrainAt } from "../core/mod.ts";
-import { ItemKind } from "../core/terrain.ts";
+import {
+  type GameEvent,
+  type GameState,
+  type ItemKind,
+  terrainAt,
+} from "../core/mod.ts";
 
 function element(id: string): HTMLElement {
   return document.getElementById(id)!;
