@@ -1,6 +1,6 @@
 # Tsunami Loop
 
-**play it** <https://github.com/deconley919/D3>
+**play it** <https://deconley919.github.io/D3/>
 
 **Target:** a keyboard-playable survival-crafting game for the browser. A tsunami destroyed your island in Hawaii and killed you, and you were sent back to the day before it hits, again and again. Gather materials and craft a beacon to stab into the island to survive the tsunami and break the loop.
 
@@ -30,10 +30,9 @@ git clone https://github.com/deconley919/D3
 cd D3
 deno task setup
 deno task dev
-deno task build
-deno task ci
-deno task preview
 ```
+
+Run `deno task ci` to run every check
 
 ## How to add a recipe
 
