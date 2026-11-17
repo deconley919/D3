@@ -78,3 +78,46 @@ Deno.test("pearls can be gathered once on the water", () => {
   assert(events[0].type === "gathered");
   assertEquals(events[0].item, "pearl");
 });
+
+const ARMOR = RECIPES.find((r) => r.id === "water armor")!;
+
+// A new game with the player on floodwater, surrounded by floodwater on all four sides.
+function onOpenWater(seed: number) {
+  const around = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]];
+  for (let y = -50; y <= 50; y++) {
+    for (let x = -50; x <= 50; x++) {
+      if (
+        around.every(([dx, dy]) =>
+          terrainAt(seed, x + dx, y + dy) === "floodwater"
+        )
+      ) {
+        return { ...newGame(seed), player: { x, y } };
+      }
+    }
+  }
+  throw new Error(`no open water found near the origin for seed ${seed}`);
+}
+
+Deno.test("crafting away the raft never strands the player on open water", () => {
+  const state = { ...onOpenWater(121), inventory: { ...ARMOR.inputs } };
+  const snapshot = JSON.parse(JSON.stringify(state));
+
+  const events = apply(state, { type: "craft", recipe: ARMOR.id });
+
+  assertEquals(events, [{
+    type: "craftFailed",
+    recipe: ARMOR.id,
+    reason: "would be stranded",
+    missing: [],
+  }]);
+  assertEquals(state, snapshot);
+});
+
+Deno.test("water armor still crafts on land", () => {
+  const state = {
+    ...besideTerrain(121, "floodwater"),
+    inventory: { ...ARMOR.inputs },
+  };
+  const events = apply(state, { type: "craft", recipe: ARMOR.id });
+  assertEquals(events[0].type, "crafted");
+});

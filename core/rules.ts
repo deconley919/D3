@@ -55,7 +55,7 @@ export type GameEvent =
   | {
     type: "craftFailed";
     recipe: string;
-    reason: "unknown recipe" | "missing items";
+    reason: "unknown recipe" | "missing items" | "would be stranded";
     missing: Missing[];
   }
   | { type: "unlocked"; terrains: Terrain[] }

@@ -10,6 +10,20 @@ function element(id: string): HTMLElement {
   return document.getElementById(id)!;
 }
 
+type CraftFailed = Extract<GameEvent, { type: "craftFailed" }>;
+
+function describeCraftFailure(event: CraftFailed): string {
+  switch (event.reason) {
+    case "unknown recipe":
+      return `no recipe "${event.recipe}"`;
+    case "missing items":
+      return `can't craft ${event.recipe}: need ` +
+        event.missing.map((m) => `${m.item} ${m.have}/${m.need}`).join(", ");
+    case "would be stranded":
+      return `can't craft ${event.recipe} here: you would be stranded`;
+  }
+}
+
 function describe(event: GameEvent): string {
   switch (event.type) {
     case "moved":
@@ -24,10 +38,7 @@ function describe(event: GameEvent): string {
     case "crafted":
       return `crafted ${event.output}`;
     case "craftFailed":
-      return event.reason === "unknown recipe"
-        ? `no recipe "${event.recipe}"`
-        : `can't craft ${event.recipe}: need ` +
-          event.missing.map((m) => `${m.item} ${m.have}/${m.need}`).join(", ");
+      return describeCraftFailure(event);
     case "unlocked":
       return `${event.terrains.join(", ")} is now crossable`;
     case "ended":
