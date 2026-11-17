@@ -2,7 +2,6 @@ import {
   type GameEvent,
   type GameState,
   type ItemKind,
-  RECIPES,
   terrainAt,
 } from "../core/mod.ts";
 
@@ -57,7 +56,6 @@ export class Hud {
     this.seed = state.seed;
     this.shownItems = { ...state.inventory };
     this.showPosition(state.player.x, state.player.y);
-    this.renderRecipes();
     this.renderInventory();
   }
 
@@ -114,19 +112,5 @@ export class Hud {
       row.textContent = `${item} x ${count}`;
       list.append(row);
     }
-  }
-
-  private renderRecipes() {
-    const list = element("recipes");
-    list.replaceChildren(
-      ...RECIPES.map((recipe, i) => {
-        const row = document.createElement("li");
-        const inputs = Object.entries(recipe.inputs)
-          .map(([item, n]) => `${item} ×${n}`)
-          .join(", ");
-        row.textContent = `${i + 1}  ${recipe.output} ← ${inputs}`;
-        return row;
-      }),
-    );
   }
 }

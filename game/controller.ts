@@ -68,6 +68,11 @@ export class Controller {
     this.next();
   }
 
+  submit(command: Command) {
+    this.pressed = command;
+    this.next();
+  }
+
   private keyUp(event: KeyboardEvent) {
     this.held = this.held.filter((direction) =>
       direction !== ARROWS[event.key]

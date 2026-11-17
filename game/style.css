@@ -117,3 +117,25 @@ body {
   color: #f5e6a8;
   text-align: center;
 }
+
+#recipes button {
+  width: 100%;
+  padding: 6px 10px;
+  text-align: left;
+  font: inherit;
+  color: #8d8a82;
+  background: #1b1e23;
+  border: 1px solid #3a3f48;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#recipes button.ready {
+  color: #f5e6a8;
+  border-color: #f5e6a8;
+}
+
+#recipes button:focus-visible {
+  outline: 2px solid #f5e6a8;
+  outline-offset: 2px;
+}
