@@ -142,6 +142,19 @@ export function missingFor(inventory: Inventory, recipe: Recipe): Missing[] {
   return missing;
 }
 
+function inventoryAfter(inventory: Inventory, recipe: Recipe): Inventory {
+  const next = { ...inventory };
+  for (
+    const [item, need] of Object.entries(recipe.inputs) as [ItemKind, number][]
+  ) {
+    const remaining = next[item]! - need;
+    if (remaining === 0) delete next[item];
+    else next[item] = remaining;
+  }
+  next[recipe.output] = (next[recipe.output] ?? 0) + 1;
+  return next;
+}
+
 function craft(state: GameState, id: string): GameEvent[] {
   const recipe = RECIPES.find((r) => r.id === id);
   if (!recipe) {
@@ -163,6 +176,22 @@ function craft(state: GameState, id: string): GameEvent[] {
       recipe: id,
       reason: "missing items",
       missing,
+    }];
+  }
+
+  // refuse a craft that would leave the player unable to stand where they are
+  const here = state.player;
+  if (
+    !canEnter(
+      inventoryAfter(state.inventory, recipe),
+      terrainAt(state.seed, here.x, here.y),
+    )
+  ) {
+    return [{
+      type: "craftFailed",
+      recipe: id,
+      reason: "would be stranded",
+      missing: [],
     }];
   }
 
