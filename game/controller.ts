@@ -16,6 +16,7 @@ const ARROWS: Record<string, Direction> = {
 export class Controller {
   private readonly state: GameState;
   private readonly presenter: Presenter;
+  private readonly recording: Command[] = [];
   // A tap made during a walk, kept until the presenter is free.
   private pressed: Command | null = null;
   private held: Direction[] = [];
@@ -84,9 +85,17 @@ export class Controller {
     this.pressed = null;
     if (!command) return;
 
+    this.recording.push(structuredClone(command));
+
     // Playing nothing would report idle at once, and a held key would land back
     // here until the stack overflowed. No events means there is nothing to wait for.
     const events = apply(this.state, command);
     if (events.length > 0) this.presenter.play(events);
+
+    if (events.some((e) => e.type === "ended")) {
+      console.log(
+        JSON.stringify({ seed: this.state.seed, commands: this.recording }),
+      );
+    }
   }
 }
