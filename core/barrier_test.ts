@@ -5,6 +5,7 @@ import { isPassable, type Terrain, terrainAt } from "./terrain.ts";
 
 const SEED = 121;
 const RAFT = RECIPES.find((r) => r.id === "raft")!;
+const ROPE = RECIPES.find((r) => r.id === "rope")!;
 
 // a new game with the player on a passable cell and `terrain` one step east.
 function besideTerrain(seed: number, terrain: Terrain) {
@@ -54,7 +55,7 @@ Deno.test("floodwater is shut before a raft and open after", () => {
 });
 
 Deno.test("crafting something that unlocks nothing gives no unlocked event", () => {
-  const state = { ...newGame(SEED), inventory: { fiber: 2 } };
+  const state = { ...newGame(SEED), inventory: { ...ROPE.inputs } };
   const events = apply(state, { type: "craft", recipe: "rope" });
   assertEquals(events.map((e) => e.type), ["crafted"]);
 });

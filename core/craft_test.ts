@@ -4,6 +4,8 @@ import type { ItemKind } from "./terrain.ts";
 import { RECIPES } from "./recipes.ts";
 
 const SEED = 121;
+const ROPE = RECIPES.find((r) => r.id === "rope")!;
+const ROPE_FIBER = ROPE.inputs.fiber!;
 
 Deno.test("every recipe row crafts", () => {
   for (const recipe of RECIPES) {
@@ -27,7 +29,7 @@ Deno.test("every recipe row crafts", () => {
 });
 
 Deno.test("a craft with missing items changes nothing and says why", () => {
-  const state = { ...newGame(SEED), inventory: { fiber: 1 } };
+  const state = { ...newGame(SEED), inventory: { fiber: ROPE_FIBER - 1 } };
   const snapshot = JSON.parse(JSON.stringify(state));
 
   const events = apply(state, { type: "craft", recipe: "rope" });
@@ -37,7 +39,7 @@ Deno.test("a craft with missing items changes nothing and says why", () => {
     type: "craftFailed",
     recipe: "rope",
     reason: "missing items",
-    missing: [{ item: "fiber", need: 2, have: 1 }],
+    missing: [{ item: "fiber", need: ROPE_FIBER, have: ROPE_FIBER - 1 }],
   }]);
 });
 
@@ -57,7 +59,7 @@ Deno.test("an unknown recipe changes nothing", () => {
 });
 
 Deno.test("a crafted event keeps its counts while state moves on", () => {
-  const state = { ...newGame(SEED), inventory: { fiber: 4 } };
+  const state = { ...newGame(SEED), inventory: { fiber: ROPE_FIBER * 2 } };
 
   const [first] = apply(state, { type: "craft", recipe: "rope" });
   apply(state, { type: "craft", recipe: "rope" });
@@ -66,6 +68,6 @@ Deno.test("a crafted event keeps its counts while state moves on", () => {
     type: "crafted",
     recipe: "rope",
     output: "rope",
-    counts: { fiber: 2, rope: 1 },
+    counts: { fiber: ROPE_FIBER, rope: 1 },
   });
 });
