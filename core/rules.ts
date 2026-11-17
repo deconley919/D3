@@ -166,8 +166,6 @@ function craft(state: GameState, id: string): GameEvent[] {
     }];
   }
 
-  const inputs = Object.entries(recipe.inputs) as [ItemKind, number][];
-
   const missing = missingFor(state.inventory, recipe);
 
   if (missing.length > 0) {
@@ -179,14 +177,11 @@ function craft(state: GameState, id: string): GameEvent[] {
     }];
   }
 
+  const after = inventoryAfter(state.inventory, recipe);
+
   // refuse a craft that would leave the player unable to stand where they are
   const here = state.player;
-  if (
-    !canEnter(
-      inventoryAfter(state.inventory, recipe),
-      terrainAt(state.seed, here.x, here.y),
-    )
-  ) {
+  if (!canEnter(after, terrainAt(state.seed, here.x, here.y))) {
     return [{
       type: "craftFailed",
       recipe: id,
@@ -199,17 +194,14 @@ function craft(state: GameState, id: string): GameEvent[] {
     ALL_TERRAINS.filter((t) => canEnter(state.inventory, t));
   const before = enterable();
 
-  const counts: Counts = {};
-  for (const [item, need] of inputs) {
-    const remaining = state.inventory[item]! - need;
-    if (remaining === 0) delete state.inventory[item];
-    else state.inventory[item] = remaining;
-    counts[item] = remaining;
-  }
+  state.inventory = after;
 
-  const made = (state.inventory[recipe.output] ?? 0) + 1;
-  state.inventory[recipe.output] = made;
-  counts[recipe.output] = made;
+  const counts: Counts = {};
+  for (
+    const item of [...Object.keys(recipe.inputs), recipe.output] as ItemKind[]
+  ) {
+    counts[item] = after[item] ?? 0;
+  }
 
   const opened = enterable().filter((t) => !before.includes(t));
   const events: GameEvent[] = [
