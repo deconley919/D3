@@ -38,10 +38,9 @@ const NOTES: Record<SoundName, Note[]> = {
     { frequency: 660, seconds: 0.2, wave: "sine", at: 0.16 },
   ],
   win: [
-    { frequency: 523, seconds: 0.25, wave: "sine" },
-    { frequency: 659, seconds: 0.25, wave: "sine", at: 0.12 },
-    { frequency: 784, seconds: 0.25, wave: "sine", at: 0.24 },
-    { frequency: 1047, seconds: 0.6, wave: "sine", at: 0.36 },
+    { frequency: 392, seconds: 0.5, wave: "sine" },
+    { frequency: 523, seconds: 0.5, wave: "sine", at: 0.3 },
+    { frequency: 784, seconds: 1.0, wave: "sine", at: 0.6 },
   ],
 };
 

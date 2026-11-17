@@ -41,7 +41,7 @@ function describe(event: GameEvent): string {
     case "unlocked":
       return `${event.terrains.join(", ")} is now crossable`;
     case "ended":
-      return `the ${event.recipe} is lit. You win!`;
+      return `the ${event.recipe} is injected into the soil. The loop is broken!`;
   }
 }
 

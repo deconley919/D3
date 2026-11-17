@@ -106,15 +106,15 @@ body {
 
 #goal {
   margin: 0;
-  color: #f5e6a8;
+  color: #ffb347;
 }
 
 #banner {
   padding: 12px;
-  border: 2px solid #f5e6a8;
+  border: 2px solid #ffb347;
   border-radius: 4px;
   background: #262a31;
-  color: #f5e6a8;
+  color: #ffb347;
   text-align: center;
 }
 
@@ -131,11 +131,11 @@ body {
 }
 
 #recipes button.ready {
-  color: #f5e6a8;
-  border-color: #f5e6a8;
+  color: #ffb347;
+  border-color: #ffb347;
 }
 
 #recipes button:focus-visible {
-  outline: 2px solid #f5e6a8;
+  outline: 2px solid #ffb347;
   outline-offset: 2px;
 }
