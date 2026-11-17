@@ -1,8 +1,70 @@
-# D3 starter
+# Tsunami Loop
 
-A walking skeleton: one thin slice of a game that works from end to end. The player moves gridwise over a big seeded world, with a game core that knows nothing about Phaser and a Phaser client that presents what the core reports. Assignment instructions are on Canvas.
+**play it** <https://github.com/deconley919/D3>
 
-Install [Deno](https://docs.deno.com/runtime/getting_started/installation/) and [Git](https://git-scm.com/downloads). Create your own repository from this template, clone it, open a terminal in that folder, and run `deno task setup` once. Run `deno task dev` and open the local URL printed in the terminal (normally `http://localhost:3000`). Arrow keys move. Add `?seed=7` to the URL for another world. Open the repository folder itself in VS Code, not a parent folder, and accept the recommended Deno extension. If Phaser still shows errors or `any` after `deno task setup`, type or save in that file once.
+**Target:** a keyboard-playable survival-crafting game for the browser. A tsunami destroyed your island in Hawaii and killed you, and you were sent back to the day before it hits, again and again. Gather materials and craft a beacon to stab into the island to survive the tsunami and break the loop.
+
+Made by Devin and Keanu for CMPM 121 (D3).
+
+## How to play
+
+| Key             | Action                                  |
+| --------------- | --------------------------------------- |
+| Arrow keys      | Move one cell                           |
+| `E`             | Gather from the cell you stand on       |
+| `1`-`9`         | Craft the recipe with that number       |
+| `Tab` / `Enter` | Focus a recipe button and craft with it |
+
+- Sand and palm give you shell and fiber. Basalt has nothing - acts as a physical blocakde
+- Floodwater blocks you until you craft a raft. Standing in the flood lets you gather pearls
+- A recipe button glows when you can craft it. Otherwise it shows what is missing
+- A craft that would leave you stranded on open water is refused, as the raft is needed to travel across it
+- Craft the **beacon** to win. After that, the game doesn't accept anymore commands
+
+## Run it locally
+
+Needs [Deno](https://deno.com/) and git.
+
+```bash
+git clone https://github.com/deconley919/D3
+cd D3
+deno task setup
+deno task dev
+deno task build
+deno task ci
+deno task preview
+```
+
+## How to add a recipe
+
+Recipes are rows of data in **`core/recipes.ts`**. Add a row to `RECIPES`:
+
+```ts
+{ id: "rope", inputs: { fiber: 2 }, output: "rope" },
+```
+
+- If the recipe uses or makes a **new item**, add its name to the `ItemKind` union in **`core/terrain.ts`**.
+- If a terrain is to yield the new item, change that terrain's row in `YIELDS` in **`core/terrain.ts`**.
+- If the item is to open a barrier, add it to `UNLOCKS` in **`core/terrain.ts`**.
+
+No rule code changes. `craft` and `missingFor` in **`core/rules.ts`** read the table, and the recipe buttons are built from it by **`game/recipe_book.ts`**. The new recipe also gets the next digit key in **`game/controller.ts`**, up to 9.
+
+Then run `deno task test`. **`core/content_test.ts`** fails if an input has no source, and **`core/reach_test.ts`** fails if a recipe can never be made.
+
+## How it is built
+
+- **`core/`** is the game itself: state, seeded terrain, recipes, and `apply(state, command)`. It has no browser, clock, or Phaser, so tests run it headlessly
+- **`game/`** is the client. Only `game/grid/` may import Phaser, and only to draw the grid. The controller turns keys and button clicks into commands, the presenter plays the resulting events in order, and the grid, HUD, and sound each show them.
+
+## Tests
+
+- `rules_test.ts`, `harvest_test.ts`, `craft_test.ts`: moving, gathering, and crafting, including failures that change nothing.
+- `barrier_test.ts`: floodwater is shut before a raft and open after, and crafting away the raft never strands the player. This test came from a bug found by hand.
+- `reach_test.ts`: a fixpoint check that every recipe, and the beacon, can be made, and that a recipe needing its own output is reported unreachable.
+- `ending_test.ts`: after the beacon, every command does nothing.
+- `determinism_test.ts`: a recorded run in `core/runs/full_run.json` finishes the game and repeats with identical state and events.
+
+[TESTING.md](TESTING.md) is the manual test script.
 
 ## Two folders, two rules
 
@@ -37,10 +99,6 @@ Named here so you can read about them. Each also appears in a one-line comment w
 - [Given-When-Then](https://martinfowler.com/bliki/GivenWhenThen.html): the shape of the sample unit tests.
 - [Singleton](https://gameprogrammingpatterns.com/singleton.html), avoided on purpose: `newGame(seed)` makes as many worlds as tests need.
 
-## Tests
-
-`deno task test` runs every `*_test.ts` file in `core/`, with no browser involved. The samples show the shape: a move, a blocked move that changes nothing, an event that keeps its cells while state moves on, terrain determinism, a check that no seed starts walled in, and a replay that plays the same seed and commands twice and compares the results. Add your own beside them.
-
 ## Tasks
 
 | Task                 | What it does                                                          |
@@ -71,18 +129,6 @@ The commit hook and the GitHub Pages workflow both run `deno task ci`. See each 
 | Boundary 2  | Add `import Phaser from "phaser"; console.log(Phaser);` to `game/hud.ts`                                                                          | `deno task boundary` says Phaser is mentioned outside `game/grid/`. Only this gate catches it. |
 | Build       | Change `/game/main.ts` in `index.html` to a missing file                                                                                          | `deno task build` cannot resolve it                                                            |
 
-## If blocked
-
-Read the first failing command in the output, fix what it reports, and rerun `deno task ci`. If a hook or tool stalls you, ask course staff with the failing command and its error text.
-
 ## Credits
 
 Tooling adapted from the [CMPM 121 Fall 2026 D2 starter](https://github.com/ucsc-cmpm-121-f26/d2-starter), with the Phaser setup following the instructor's E4 starter. Those repositories have no explicit repository license; no new license is assigned to that material. The D3 scaffold was instructor-directed and authored with Anthropic Claude agent assistance. Dependencies retain their respective licenses.
-
-## Review bot
-
-On every push to `main`, a review bot can comment on your commit. It's optional practice feedback, and it can be wrong, so weigh what it says. Until you set it up or opt out, the Review Bot workflow shows a red X and comments on every push. That X is about the bot: check the Deploy workflow separately to see whether your own checks passed.
-
-[The workflow](.github/workflows/review-bot.yml) is the whole bot, and the top of that file explains how to set it up or opt out. [`REVIEWBOT.md`](REVIEWBOT.md) tells it what to look for, and it's yours to change.
-
-Its comments are public if your repository is. It runs on a throwaway machine with your code, can browse the web, and spends your own BayLeaf allowance.
